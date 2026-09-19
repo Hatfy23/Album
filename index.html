@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Crônicas • Álbum de Momentos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&family=Cinzel:wght@400;600&family=EB+Garamond:ital,wght@0,400;0,600;1,500&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg: #161009;
+      --sidebar: #120c07;
+      --paper: #e6d3a1;
+      --text: #2a2620;
+      --text-light: #5a5046;
+      --border: #d4c4a8;
+      --accent: #8b4513;
+      --accent-light: #d97355;
+      --shadow: 0 8px 24px rgba(0,0,0,0.4);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      background: linear-gradient(135deg, var(--sidebar) 0%, #1a1410 100%);
+      color: var(--text);
+      font-family: 'EB Garamond', serif;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .display { font-family: 'MedievalSharp', cursive; letter-spacing: 0.05em; }
+    .label { font-family: 'Cinzel', serif; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; }
+    .mono { font-family: 'Courier New', monospace; font-size: 11px; letter-spacing: 0.03em; }
+
+    /* Layout */
+    .app { display: grid; grid-template-columns: 280px 1fr; min-height: 100vh; gap: 0; }
+    .sidebar { background: var(--sidebar); padding: 30px 20px; border-right: 2px solid rgba(232, 147, 74, 0.3); overflow-y: auto; max-height: 100vh; }
+    .main { padding: 40px 50px; background: radial-gradient(ellipse 800px 400px at center top, rgba(139, 69, 19, 0.08), transparent); }
+
+    .logo { display: flex; align-items: center; gap: 10px; margin-bottom: 30px; }
+    .logo-icon { font-size: 32px; }
+    .logo-text { font-family: 'MedievalSharp', cursive; font-size: 20px; color: var(--accent-light); letter-spacing: 0.05em; }
+
+    .sidebar-section { margin-bottom: 28px; }
+    .sidebar-label { class: label; color: var(--accent); margin-bottom: 10px; font-size: 9px; opacity: 0.7; }
+    .nav-list { list-style: none; padding: 0; margin: 0; }
+    .nav-item { margin-bottom: 8px; }
+    .nav-link {
+      display: block; padding: 10px 12px; border-radius: 6px; background: rgba(255,255,255,0.05);
+      color: #e6d3a1; text-decoration: none; font-size: 13px; transition: 0.2s ease;
+      border-left: 2px solid transparent;
+    }
+    .nav-link:hover, .nav-link.active { background: rgba(232,147,74,0.2); border-left-color: var(--accent-light); }
+
+    .btn {
+      border: 1px solid var(--accent); background: var(--accent);
+      color: white; padding: 10px 16px; border-radius: 6px;
+      font-family: inherit; cursor: pointer; font-size: 13px; font-weight: 500;
+      transition: 0.2s; width: 100%;
+    }
+    .btn:hover { background: var(--accent-light); border-color: var(--accent-light); }
+    .btn-ghost { background: transparent; color: var(--accent-light); border: 1px solid var(--accent); }
+    .btn-ghost:hover { background: rgba(232, 147, 74, 0.1); }
+
+    .sync-status {
+      font-size: 10px; color: var(--text-light);
+      margin-top: 20px; padding: 10px; border-radius: 4px;
+      background: rgba(0,0,0,0.3);
+    }
+
+    /* Main content */
+    .page { display: none; }
+    .page.active { display: block; animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+    .page-title { font-family: 'MedievalSharp', cursive; font-size: 36px; letter-spacing: 0.03em; margin: 0; color: var(--accent); }
+
+    /* Album Grid */
+    .album-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 24px; }
+    .album-card {
+      background: var(--paper); border-radius: 8px; padding: 20px;
+      box-shadow: var(--shadow); cursor: pointer; transition: 0.3s ease;
+      position: relative; overflow: hidden;
+    }
+    .album-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+      background: linear-gradient(90deg, var(--accent), var(--accent-light));
+    }
+    .album-card:hover { transform: translateY(-6px); box-shadow: 0 12px 32px rgba(0,0,0,0.5); }
+
+    .album-icon { font-size: 40px; margin-bottom: 12px; }
+    .album-title { font-family: 'Cinzel', serif; font-size: 18px; margin: 0 0 6px; color: var(--accent); }
+    .album-meta {
+      font-size: 12px; color: var(--text-light); margin-top: 12px;
+      padding-top: 12px; border-top: 1px solid rgba(0,0,0,0.1);
+      display: flex; justify-content: space-between;
+    }
+
+    /* Photo Grid (Polaroid) */
+    .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 24px; margin-top: 30px; }
+    .polaroid {
+      background: #efe9dd; border-radius: 2px; padding: 12px 12px 0;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+      cursor: pointer; transition: 0.2s ease;
+    }
+    .polaroid:nth-child(3n+1) { transform: rotate(-1.2deg); }
+    .polaroid:nth-child(3n+2) { transform: rotate(0.8deg); }
+    .polaroid:nth-child(3n) { transform: rotate(-0.5deg); }
+    .polaroid:hover { transform: rotate(0deg) translateY(-4px) scale(1.02); z-index: 2; }
+
+    .photo-frame { width: 100%; aspect-ratio: 1; border-radius: 2px; overflow: hidden; background: #2a2620; }
+    .photo-frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .photo-cap { padding: 10px 6px 14px; }
+    .photo-caption { font-family: 'EB Garamond', serif; font-style: italic; font-size: 12px; color: var(--text);
+      line-height: 1.4; min-height: 16px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .photo-meta { margin-top: 6px; font-size: 9px; color: var(--text-light); display: flex; gap: 8px; flex-wrap: wrap; }
+
+    /* Modal */
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 1000; padding: 20px;
+    }
+    .modal {
+      background: var(--paper); border-radius: 8px; width: 100%;
+      max-width: 500px; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow);
+    }
+    .modal-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .modal-title { font-family: 'Cinzel', serif; font-size: 18px; margin: 0; }
+    .modal-close { background: none; border: none; font-size: 20px; cursor: pointer; }
+    .modal-body { padding: 20px 24px; display: flex; flex-direction: column; gap: 16px; }
+
+    .field { display: flex; flex-direction: column; }
+    .field-label { font-family: 'Cinzel', serif; font-size: 11px; color: var(--accent); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .field input, .field textarea {
+      background: rgba(255,255,255,0.5); border: 1px solid var(--border);
+      padding: 10px 12px; border-radius: 4px; font-family: inherit; font-size: 13px;
+    }
+    .field input:focus, .field textarea:focus { outline: none; border-color: var(--accent); background: white; }
+
+    /* Toast */
+    .toast {
+      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+      background: var(--accent); color: white; padding: 12px 20px; border-radius: 6px;
+      font-size: 13px; box-shadow: var(--shadow); z-index: 2000;
+      opacity: 0; pointer-events: none; transition: 0.3s ease;
+    }
+    .toast.show { opacity: 1; pointer-events: auto; }
+
+    /* Empty state */
+    .empty {
+      text-align: center; padding: 80px 20px; color: var(--text-light);
+    }
+    .empty-icon { font-size: 48px; margin-bottom: 16px; }
+    .empty-title { font-family: 'MedievalSharp', cursive; font-size: 24px; margin: 0 0 12px; color: var(--accent); }
+
+    /* Loading */
+    .spinner {
+      border: 2px solid rgba(139,69,19,0.2); border-top: 2px solid var(--accent);
+      border-radius: 50%; width: 20px; height: 20px; animation: spin 0.8s linear infinite;
+      display: inline-block;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Google Drive Link Input */
+    .drive-link-input {
+      position: relative;
+    }
+    .drive-link-preview {
+      width: 100px; height: 100px; border-radius: 6px; border: 1px solid var(--border);
+      overflow: hidden; margin-top: 10px; background: #2a2620;
+    }
+    .drive-link-preview img { width: 100%; height: 100%; object-fit: cover; }
+
+    @media (max-width: 768px) {
+      .app { grid-template-columns: 1fr; }
+      .sidebar { max-height: none; border-right: none; border-bottom: 2px solid rgba(232, 147, 74, 0.3); padding: 20px; }
+      .main { padding: 30px 20px; }
+      .album-grid { grid-template-columns: 1fr; }
+      .page-title { font-size: 24px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app">
+  <div class="sidebar">
+    <div class="logo">
+      <div class="logo-icon">📖</div>
+      <div class="logo-text">Crônicas</div>
+    </div>
+    <div class="sidebar-section">
+      <nav class="nav-list" id="navAlbums"></nav>
+    </div>
+    <div class="sidebar-section">
+      <button class="btn" id="btnNewAlbum">+ Novo Álbum</button>
+    </div>
+    <div class="sync-status" id="syncStatus">
+      Offline • Dados locais
+    </div>
+  </div>
+
+  <div class="main">
+    <!-- Home -->
+    <div class="page active" id="pageHome">
+      <div class="page-header">
+        <h1 class="page-title">Meus Momentos</h1>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-ghost" id="btnSync" style="width: auto; padding: 10px 14px;">
+            <span class="spinner" id="syncSpinner" style="display: none;"></span>
+            <span id="syncText">Sincronizar</span>
+          </button>
+        </div>
+      </div>
+      <div class="album-grid" id="homeAlbumGrid"></div>
+    </div>
+
+    <!-- Album View -->
+    <div class="page" id="pageAlbum">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title" id="albumTitle">...</h1>
+          <p id="albumDesc" style="margin: 6px 0 0; color: var(--text-light); font-size: 14px;"></p>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-ghost" id="btnEditAlbum">Personalizar</button>
+          <button class="btn" id="btnAddPhoto">+ Foto</button>
+        </div>
+      </div>
+      <div class="photo-grid" id="albumPhotos"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- MODALS -->
+<div id="modalsContainer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0"></script>
+<script>
+/* ==================== SUPABASE CONFIG ==================== */
+const SUPABASE_URL = 'https://cfdzwduajsatbydphrtq.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNmZHp3ZHVhanNhdGJ5ZHBocnRxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4MzQ2MDIsImV4cCI6MjA5MzQxMDYwMn0.zUB9rASXCXxKVJFfvXrfcMCivQ3fPV4AE0Jvo4hCamQ';
+
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+/* ==================== STATE ==================== */
+let state = {
+  albums: [],
+  userId: localStorage.getItem('cronicas_user_id') || generateUserId(),
+  lastSync: 0,
+  isOnline: navigator.onLine
+};
+localStorage.setItem('cronicas_user_id', state.userId);
+
+let currentAlbumId = null;
+
+/* ==================== HELPERS ==================== */
+function generateUserId() {
+  return 'user_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+}
+
+function uid() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+}
+
+function toast(msg, danger = false) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.style.background = danger ? '#d1584f' : 'var(--accent)';
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+function formatDate(iso) {
+  if (!iso) return '';
+  const [y, m, d] = iso.split('-');
+  return `${d}/${m}/${y}`;
+}
+
+function extractGoogleDriveFileId(link) {
+  const match = link.match(/\/d\/([a-zA-Z0-9-_]+)\//);
+  return match ? match[1] : null;
+}
+
+function getGoogleDriveThumbnailUrl(fileId) {
+  return `https://drive.google.com/thumbnail?id=${fileId}&sz=w200`;
+}
+
+/* ==================== DATA LAYER ==================== */
+async function syncAlbums() {
+  try {
+    state.isOnline = navigator.onLine;
+    if (!state.isOnline) {
+      updateSyncStatus('Offline');
+      return;
+    }
+
+    showSyncSpinner(true);
+    updateSyncStatus('Sincronizando...');
+
+    // Buscar álbuns do Supabase
+    const { data: dbAlbums, error } = await supabase
+      .from('cronicas_albums_v5')
+      .select('*')
+      .eq('user_id', state.userId)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    // Buscar fotos de cada álbum
+    for (let album of dbAlbums || []) {
+      const { data: photos } = await supabase
+        .from('cronicas_photos_v5')
+        .select('*')
+        .eq('album_id', album.id)
+        .order('added_at', { ascending: false });
+
+      album.photos = photos || [];
+      album.id = album.album_id; // Renomear para compatibilidade
+    }
+
+    state.albums = dbAlbums || [];
+    state.lastSync = Date.now();
+    localStorage.setItem('cronicas_sync_cache', JSON.stringify(state.albums));
+
+    updateSyncStatus('Sincronizado');
+    showSyncSpinner(false);
+    renderHome();
+    toast('Dados sincronizados com Supabase');
+  } catch (err) {
+    console.error('Sync error:', err);
+    toast('Erro ao sincronizar', true);
+    showSyncSpinner(false);
+    updateSyncStatus('Erro ao sincronizar');
+  }
+}
+
+async function saveAlbum(album) {
+  try {
+    const payload = {
+      user_id: state.userId,
+      album_title: album.title,
+      album_description: album.description || '',
+      album_accent: album.accent || '#8b4513',
+      album_icon: album.icon || '📖',
+      album_layout: album.layout || 'grid',
+      is_archived: false,
+      updated_at: new Date().toISOString()
+    };
+
+    let result;
+    if (album.db_id) {
+      // Update
+      const { data, error } = await supabase
+        .from('cronicas_albums_v5')
+        .update(payload)
+        .eq('id', album.db_id)
+        .select();
+      if (error) throw error;
+      result = data[0];
+    } else {
+      // Insert
+      const { data, error } = await supabase
+        .from('cronicas_albums_v5')
+        .insert([{ ...payload, created_at: new Date().toISOString() }])
+        .select();
+      if (error) throw error;
+      result = data[0];
+      album.db_id = result.id;
+    }
+
+    album.id = result.id;
+    toast('Álbum salvo');
+  } catch (err) {
+    console.error('Save album error:', err);
+    toast('Erro ao salvar álbum', true);
+  }
+}
+
+async function savePhoto(albumId, photo) {
+  try {
+    const album = state.albums.find(a => a.id === albumId);
+    if (!album) throw new Error('Album not found');
+
+    const fileId = extractGoogleDriveFileId(photo.googleDriveLink);
+    
+    const payload = {
+      album_id: album.db_id || albumId,
+      google_drive_link: photo.googleDriveLink,
+      google_drive_file_id: fileId,
+      caption: photo.caption || '',
+      location: photo.location || '',
+      photo_date: photo.date || null,
+      mood_emoji: photo.mood || '',
+      added_at: new Date().toISOString()
+    };
+
+    const { data, error } = await supabase
+      .from('cronicas_photos_v5')
+      .insert([payload])
+      .select();
+
+    if (error) throw error;
+    
+    photo.db_id = data[0].id;
+    photo.thumbnailUrl = getGoogleDriveThumbnailUrl(fileId);
+    toast('Foto adicionada');
+  } catch (err) {
+    console.error('Save photo error:', err);
+    toast('Erro ao salvar foto', true);
+  }
+}
+
+/* ==================== RENDER ==================== */
+function renderHome() {
+  currentAlbumId = null;
+  const page = document.getElementById('pageHome');
+  const grid = page.querySelector('#homeAlbumGrid');
+
+  if (state.albums.length === 0) {
+    grid.innerHTML = `
+      <div class="empty" style="grid-column: 1/-1;">
+        <div class="empty-icon">📖</div>
+        <h2 class="empty-title">Nenhum álbum ainda</h2>
+        <p>Crie seu primeiro álbum para começar a guardar seus momentos.</p>
+      </div>`;
+    return;
+  }
+
+  grid.innerHTML = state.albums.map(album => `
+    <div class="album-card" onclick="renderAlbum('${album.id}')">
+      <div class="album-icon">${album.album_icon}</div>
+      <h3 class="album-title">${escapeHtml(album.album_title)}</h3>
+      <p style="margin: 0; font-size: 12px; color: var(--text-light); line-height: 1.4;">
+        ${escapeHtml(album.album_description || 'Sem descrição')}
+      </p>
+      <div class="album-meta">
+        <span>${album.photos?.length || 0} foto${album.photos?.length !== 1 ? 's' : ''}</span>
+        <span class="mono">${new Date(album.created_at).getFullYear()}</span>
+      </div>
+    </div>
+  `).join('');
+
+  showPage('pageHome');
+}
+
+function renderAlbum(albumId) {
+  currentAlbumId = albumId;
+  const album = state.albums.find(a => a.id === albumId);
+  if (!album) { renderHome(); return; }
+
+  const page = document.getElementById('pageAlbum');
+  document.getElementById('albumTitle').textContent = album.album_title;
+  document.getElementById('albumDesc').textContent = album.album_description || '';
+
+  const photosContainer = page.querySelector('#albumPhotos');
+  if (!album.photos || album.photos.length === 0) {
+    photosContainer.innerHTML = `
+      <div class="empty" style="grid-column: 1/-1;">
+        <div class="empty-icon">📸</div>
+        <h2 class="empty-title">Sem fotos</h2>
+        <p>Adicione seu primeira foto com um link do Google Drive.</p>
+      </div>`;
+    showPage('pageAlbum');
+    return;
+  }
+
+  photosContainer.innerHTML = album.photos.map(photo => `
+    <div class="polaroid">
+      <div class="photo-frame">
+        <img src="${photo.thumbnailUrl || getGoogleDriveThumbnailUrl(photo.google_drive_file_id)}" 
+             alt="foto" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22200%22><rect fill=%22%232a2620%22 width=%22200%22 height=%22200%22/><text x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22%238b7355%22 font-size=%2214%22>Imagem indisponível</text></svg>'">
+      </div>
+      <div class="photo-cap">
+        <div class="photo-caption">${escapeHtml(photo.caption)}</div>
+        <div class="photo-meta">
+          ${photo.photo_date ? `<span class="mono">${formatDate(photo.photo_date)}</span>` : ''}
+          ${photo.location ? `<span>📍 ${escapeHtml(photo.location)}</span>` : ''}
+          ${photo.mood_emoji ? `<span>${photo.mood_emoji}</span>` : ''}
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  showPage('pageAlbum');
+}
+
+function escapeHtml(s) {
+  if (!s) return '';
+  const div = document.createElement('div');
+  div.textContent = s;
+  return div.innerHTML;
+}
+
+function showPage(pageName) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(pageName).classList.add('active');
+}
+
+function showSyncSpinner(show) {
+  document.getElementById('syncSpinner').style.display = show ? 'inline-block' : 'none';
+}
+
+function updateSyncStatus(status) {
+  const el = document.getElementById('syncStatus');
+  el.textContent = status + (state.isOnline ? ' • Online' : ' • Offline');
+}
+
+/* ==================== MODALS ==================== */
+function openAlbumModal(albumId) {
+  const editing = !!albumId;
+  const album = editing ? state.albums.find(a => a.id === albumId) : {
+    title: '', description: '', accent: '#8b4513', icon: '📖'
+  };
+
+  const html = `
+    <div class="modal-backdrop" onclick="this.remove()">
+      <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <h2 class="modal-title">${editing ? 'Personalizar' : 'Novo'} Álbum</h2>
+          <button class="modal-close" onclick="this.closest('.modal-backdrop').remove()">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="field">
+            <label class="field-label">Título</label>
+            <input type="text" id="fTitle" value="${escapeHtml(album.title)}" placeholder="Ex: Viagem a Ouro Preto">
+          </div>
+          <div class="field">
+            <label class="field-label">Descrição</label>
+            <textarea id="fDesc" placeholder="Breve descrição...">${escapeHtml(album.description)}</textarea>
+          </div>
+          <div class="field">
+            <label class="field-label">Ícone</label>
+            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+              ${['📖','🏰','🗺️','📸','🌅','✈️','🎭','🎨','🌲','❄️','🍂','🌊'].map(ic => `
+                <button class="btn btn-ghost" style="width: auto; padding: 8px 12px; ${ic===album.icon?'background: rgba(232,147,74,0.2);':''}font-size: 16px;"
+                  onclick="document.getElementById('fIcon').value='${ic}';">${ic}</button>
+              `).join('')}
+            </div>
+            <input type="hidden" id="fIcon" value="${album.icon}">
+          </div>
+          <div style="display: flex; gap: 8px; margin-top: 20px;">
+            <button class="btn btn-ghost" onclick="this.closest('.modal-backdrop').remove()" style="flex: 1;">Cancelar</button>
+            <button class="btn" id="btnSaveAlbum" onclick="saveAlbumModal('${albumId}')" style="flex: 1;">
+              ${editing ? 'Salvar' : 'Criar'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  const container = document.getElementById('modalsContainer');
+  container.insertAdjacentHTML('beforeend', html);
+}
+
+async function saveAlbumModal(albumId) {
+  const title = document.getElementById('fTitle').value.trim();
+  const description = document.getElementById('fDesc').value.trim();
+  const icon = document.getElementById('fIcon').value;
+
+  if (!title) { toast('Dê um título ao álbum', true); return; }
+
+  let album;
+  if (albumId) {
+    album = state.albums.find(a => a.id === albumId);
+    if (album) {
+      album.album_title = title;
+      album.album_description = description;
+      album.album_icon = icon;
+    }
+  } else {
+    album = {
+      id: uid(),
+      db_id: null,
+      album_title: title,
+      album_description: description,
+      album_accent: '#8b4513',
+      album_icon: icon,
+      album_layout: 'grid',
+      created_at: new Date().toISOString(),
+      photos: []
+    };
+    state.albums.unshift(album);
+  }
+
+  await saveAlbum(album);
+  document.querySelector('.modal-backdrop').remove();
+  renderHome();
+}
+
+function openPhotoModal(albumId) {
+  const html = `
+    <div class="modal-backdrop" onclick="this.remove()">
+      <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <h2 class="modal-title">Adicionar Foto</h2>
+          <button class="modal-close" onclick="this.closest('.modal-backdrop').remove()">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="field">
+            <label class="field-label">Link Google Drive</label>
+            <input type="text" id="fDriveLink" placeholder="https://drive.google.com/file/d/...">
+            <small style="margin-top: 6px; color: var(--text-light); font-size: 11px;">Cole o link compartilhado da pasta ou arquivo do Google Drive</small>
+          </div>
+          <div class="field">
+            <label class="field-label">Legenda</label>
+            <textarea id="fCaption" placeholder="O que você estava fazendo?"></textarea>
+          </div>
+          <div class="field">
+            <label class="field-label">Local</label>
+            <input type="text" id="fLocation" placeholder="Ex: Praia do Rosa, SC">
+          </div>
+          <div class="field">
+            <label class="field-label">Data</label>
+            <input type="date" id="fDate">
+          </div>
+          <div style="display: flex; gap: 8px; margin-top: 20px;">
+            <button class="btn btn-ghost" onclick="this.closest('.modal-backdrop').remove()" style="flex: 1;">Cancelar</button>
+            <button class="btn" id="btnSavePhoto" onclick="savePhotoModal('${albumId}')" style="flex: 1;">Adicionar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  const container = document.getElementById('modalsContainer');
+  container.insertAdjacentHTML('beforeend', html);
+}
+
+async function savePhotoModal(albumId) {
+  const driveLink = document.getElementById('fDriveLink').value.trim();
+  if (!driveLink) { toast('Cole um link do Google Drive', true); return; }
+
+  const caption = document.getElementById('fCaption').value.trim();
+  const location = document.getElementById('fLocation').value.trim();
+  const date = document.getElementById('fDate').value;
+
+  const album = state.albums.find(a => a.id === albumId);
+  const fileId = extractGoogleDriveFileId(driveLink);
+
+  const photo = {
+    id: uid(),
+    db_id: null,
+    google_drive_link: driveLink,
+    google_drive_file_id: fileId,
+    caption,
+    location,
+    photo_date: date,
+    mood_emoji: '',
+    thumbnailUrl: getGoogleDriveThumbnailUrl(fileId),
+    added_at: Date.now()
+  };
+
+  album.photos.push(photo);
+  await savePhoto(albumId, photo);
+  document.querySelector('.modal-backdrop').remove();
+  renderAlbum(albumId);
+}
+
+/* ==================== EVENTS ==================== */
+document.getElementById('btnNewAlbum').onclick = () => openAlbumModal();
+document.getElementById('btnEditAlbum').onclick = () => openAlbumModal(currentAlbumId);
+document.getElementById('btnAddPhoto').onclick = () => openPhotoModal(currentAlbumId);
+document.getElementById('btnSync').onclick = syncAlbums;
+
+window.addEventListener('online', () => { state.isOnline = true; updateSyncStatus('Online'); toast('Conectado!'); });
+window.addEventListener('offline', () => { state.isOnline = false; updateSyncStatus('Offline'); });
+
+// Load initial state from cache
+const cached = localStorage.getItem('cronicas_sync_cache');
+if (cached) {
+  try {
+    state.albums = JSON.parse(cached);
+    renderHome();
+  } catch (e) {}
+}
+
+// Sync on load
+syncAlbums();
+</script>
+
+</body>
+</html>
